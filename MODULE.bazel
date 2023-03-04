@@ -1,0 +1,29 @@
+module(name = "bz-python", version = "0.0.0")
+
+bazel_dep(name = "rules_python", version = "0.19.0")
+
+python = use_extension("@rules_python//python:extensions.bzl", "python")
+
+# Repeat for all runtime versions required.
+python.toolchain(
+    name = "python3.9.12",
+    python_version = "3.9.12",
+)
+use_repo(python, "python3.9.12_toolchains")
+
+python.toolchain(
+    name = "python3.11.1",
+    python_version = "3.11.1",
+)
+use_repo(python, "python3.11.1_toolchains")
+
+# If we do not register them, then bazel will fall-back to the system's python!
+# Otherwise specify:
+#     --extra_toolchains="@python3.9.12_toolchains//:all"
+# or
+#     --extra_toolchains="@python3.11.1_toolchains//:all"
+# We've put them in .bazelrc as configs
+#register_toolchains(
+#    "@python3.9.12_toolchains//:all",
+#    "@python3.11.1_toolchains//:all",
+#)

@@ -1,0 +1,6 @@
+/.ijwb
+/resolved.bzl
+/bazel-bin
+/bazel-bz-python
+/bazel-out
+/bazel-testlogs
