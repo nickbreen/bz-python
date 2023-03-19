@@ -1,1 +1,32 @@
 # Deliberately blank
+
+# Well, except for all this:
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "python-3.6.15",
+    build_file = "@//:BUILD.bazel.python",
+    repo_mapping = {
+        "@openssl": "@openssl-1.1.1t",
+    },
+    sha256 = "6e28d7cdd6dd513dd190e49bca3972e20fcf455090ccf2ef3f1a227614135d91",
+    strip_prefix = "Python-3.6.15",
+    url = "https://www.python.org/ftp/python/3.6.15/Python-3.6.15.tar.xz",
+)
+
+http_archive(
+    name = "bzip2-1.0.8",
+    build_file = "@//:BUILD.bazel.bzip2",
+    sha256 = "ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269",
+    strip_prefix = "bzip2-1.0.8",
+    url = "https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz",
+)
+
+http_archive(
+    name = "openssl-1.1.1t",
+    build_file = "@//:BUILD.bazel.openssl",
+    sha256 = "8dee9b24bdb1dcbf0c3d1e9b02fb8f6bf22165e807f45adeb7c9677536859d3b",
+    strip_prefix = "openssl-1.1.1t",
+    url = "https://www.openssl.org/source/openssl-1.1.1t.tar.gz",
+)

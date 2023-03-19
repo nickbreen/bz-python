@@ -1,0 +1,28 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+filegroup(
+    name = "src",
+    srcs = glob(
+        include = ["**"],
+        exclude = ["*.bazel"],
+    ),
+)
+
+configure_make(
+    name = "openssl",
+    args = ["-j"],
+    configure_command = "config",
+    configure_in_place = True,
+    lib_source = ":src",
+    out_binaries = ["openssl"],
+    out_shared_libs = [
+        "libssl.so.1.1",
+        "libcrypto.so.1.1",
+    ],
+    targets = [
+        "",
+        "test",
+        "install",
+    ],
+    visibility = ["//visibility:public"],
+)

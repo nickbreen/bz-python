@@ -1,0 +1,22 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
+
+filegroup(
+    name = "src",
+    srcs = glob(
+        include = ["**"],
+        exclude = ["*.bazel"],
+    ),
+)
+
+cmake(
+    name = "bzip2",
+    build_args = [
+        "--verbose",
+        "--",
+        "-j",
+    ],
+    lib_source = ":src",
+    out_binaries = ["bzip2"],
+    out_shared_libs = ["libbzip2.a"],
+    out_static_libs = ["libbzip2.so"],
+)

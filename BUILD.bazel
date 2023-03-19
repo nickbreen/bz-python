@@ -1,6 +1,48 @@
 load("@rules_python//python:defs.bzl", "py_binary")
+load("@bazel_tools//tools/build_rules:test_rules.bzl", "file_test")
 
 py_binary(
     name = "hello",
     srcs = ["hello.py"],
+)
+
+sh_test(
+    name = "version",
+    size = "small",
+    srcs = ["@python-3.6.15//:python3"],
+    args = ["--version"],
+)
+
+sh_test(
+    name = "ssl",
+    size = "small",
+    srcs = ["@python-3.6.15//:python3"],
+    args = [
+        "-m",
+        "ssl",
+    ],
+)
+
+sh_test(
+    name = "bzip2",
+    size = "small",
+    srcs = ["@python-3.6.15//:python3"],
+    args = [
+        "-m",
+        "bz2",
+    ],
+)
+
+genrule(
+    name = "openssl-version",
+    srcs = ["ssl_test.py"],
+    outs = ["openssl-version.txt"],
+    cmd = "$(execpath @python-3.6.15//:python3) $< > $@",
+    tools = ["@python-3.6.15//:python3"],
+)
+
+file_test(
+    name = "test-openssl-version",
+    content = "OpenSSL 1.1.1t",
+    file = ":openssl-version",
 )
