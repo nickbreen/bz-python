@@ -1,5 +1,5 @@
 common --enable_bzlmod
-common --experimental_repository_resolved_file=resolved.bzl
+fetch --experimental_repository_resolved_file=resolved.bzl
 
 common:py39 --extra_toolchains="@python3.9.12_toolchains//:all"
 common:py311 --extra_toolchains="@python3.11.1_toolchains//:all"

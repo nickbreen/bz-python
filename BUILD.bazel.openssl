@@ -13,25 +13,24 @@ configure_make(
     args = ["-j"],
     configure_command = "config",
     configure_in_place = True,
+    includes = [
+        "include",
+    ],
     lib_source = ":src",
     out_binaries = ["openssl"],
     out_shared_libs = [
         "libssl.so.1.1",
         "libcrypto.so.1.1",
     ],
-    includes = [
-        "include"
-    ],
-    targets = [
-        "",
-        #"test",  # requires Test::Harness perl module
-        "install",
+    out_static_libs = [
+        "libssl.a",
+        "libcrypto.a",
     ],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
-    name = "openssl11",
+    name = "bin/openssl",
     srcs = [":openssl"],
     output_group = "openssl",
     visibility = ["//visibility:public"],

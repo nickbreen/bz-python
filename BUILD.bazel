@@ -1,22 +1,23 @@
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@bazel_tools//tools/build_rules:test_rules.bzl", "file_test")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "runnable_binary")  # not available in 0.9.0
 
 py_binary(
     name = "hello",
     srcs = ["hello.py"],
 )
 
-sh_test(
-    name = "version",
-    size = "small",
-    srcs = ["@python-3.6.15//:python3"],
-    args = ["--version"],
+# fails to find it's LD_LIBRARY_PATH with libssl.so.1.1 and libcrypto.so.1.1 when called as @openssl-1.1.1t//:bin/openssl
+runnable_binary(
+    name = "openssl",
+    binary = "openssl",
+    foreign_cc_target = "@openssl-1.1.1t//:openssl",
 )
 
 sh_test(
     name = "ssl",
     size = "small",
-    srcs = ["@python-3.6.15//:python3"],
+    srcs = ["@python-3.6.15//:bin/python3"],
     args = [
         "-m",
         "ssl",
@@ -26,7 +27,7 @@ sh_test(
 sh_test(
     name = "bzip2",
     size = "small",
-    srcs = ["@python-3.6.15//:python3"],
+    srcs = ["@python-3.6.15//:bin/python3"],
     args = [
         "-m",
         "bz2",
@@ -36,23 +37,35 @@ sh_test(
 genrule(
     name = "openssl-version",
     outs = ["openssl-version.txt"],
-    cmd = """$(execpath @openssl-1.1.1t//:openssl11) version > $@""",  # fails to find it's LD_LIBRARY_PATH with libssl.so.1.1 and libcrypto.so.1.1
-    tools = ["@openssl-1.1.1t//:openssl11"],
-
+    cmd = """$(execpath :openssl) version > $@""",
+    tools = [":openssl"],
 )
 
 file_test(
     name = "test-openssl-version",
-    content = "OpenSSL 1.1.1t",
+    content = "OpenSSL 1.1.1t  7 Feb 2023\n",
     file = ":openssl-version",
+)
+
+genrule(
+    name = "python-version",
+    outs = ["python-version.txt"],
+    cmd = "$(execpath @python-3.6.15//:bin/python3) --version > $@",
+    tools = ["@python-3.6.15//:bin/python3"],
+)
+
+file_test(
+    name = "test-python-version",
+    content = "Python 3.6.15\n",
+    file = ":python-version",
 )
 
 genrule(
     name = "python-openssl-version",
     srcs = ["ssl_test.py"],
     outs = ["python-openssl-version.txt"],
-    cmd = "$(execpath @python-3.6.15//:python3) $< > $@",
-    tools = ["@python-3.6.15//:python3"],
+    cmd = "$(execpath @python-3.6.15//:bin/python3) $< > $@",
+    tools = ["@python-3.6.15//:bin/python3"],
 )
 
 file_test(

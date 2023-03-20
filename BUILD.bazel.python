@@ -9,14 +9,17 @@ filegroup(
 )
 
 configure_make(
-    name = "python-3.6.15",
+    name = "python",
     args = ["-j"],
+    build_data = [
+        "@openssl",
+    ],
     configure_in_place = True,
     configure_options = [
         "OPT=-O1",  # https://bugs.python.org/issue45700
         "CFLAGS='-Dredacted=\"redacted\"'",  # https://github.com/bazelbuild/rules_foreign_cc/issues/239
-        "--with-openssl=$(location @openssl)",
     ],
+    lib_name = "python36",  # defaults to name: clashes with python binary
     lib_source = ":src",
     out_binaries = [
         "2to3",
@@ -35,19 +38,14 @@ configure_make(
         "pyvenv-3.6",
     ],
     out_data_dirs = ["lib"],
-    targets = [
-        "",
-        "test",
-        "install",
-    ],
     deps = [
         "@openssl",
     ],
 )
 
 filegroup(
-    name = "python3",
-    srcs = [":python-3.6.15"],
+    name = "bin/python3",
+    srcs = [":python"],
     output_group = "python3",
     visibility = ["//visibility:public"],
 )
