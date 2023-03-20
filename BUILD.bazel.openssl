@@ -19,10 +19,20 @@ configure_make(
         "libssl.so.1.1",
         "libcrypto.so.1.1",
     ],
+    includes = [
+        "include"
+    ],
     targets = [
         "",
-        "test",
+        #"test",  # requires Test::Harness perl module
         "install",
     ],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "openssl11",
+    srcs = [":openssl"],
+    output_group = "openssl",
     visibility = ["//visibility:public"],
 )

@@ -35,14 +35,28 @@ sh_test(
 
 genrule(
     name = "openssl-version",
-    srcs = ["ssl_test.py"],
     outs = ["openssl-version.txt"],
-    cmd = "$(execpath @python-3.6.15//:python3) $< > $@",
-    tools = ["@python-3.6.15//:python3"],
+    cmd = """$(execpath @openssl-1.1.1t//:openssl11) version > $@""",  # fails to find it's LD_LIBRARY_PATH with libssl.so.1.1 and libcrypto.so.1.1
+    tools = ["@openssl-1.1.1t//:openssl11"],
+
 )
 
 file_test(
     name = "test-openssl-version",
     content = "OpenSSL 1.1.1t",
     file = ":openssl-version",
+)
+
+genrule(
+    name = "python-openssl-version",
+    srcs = ["ssl_test.py"],
+    outs = ["python-openssl-version.txt"],
+    cmd = "$(execpath @python-3.6.15//:python3) $< > $@",
+    tools = ["@python-3.6.15//:python3"],
+)
+
+file_test(
+    name = "test-python-openssl-version",
+    content = "OpenSSL 1.1.1t",
+    file = ":python-openssl-version",
 )
