@@ -12,13 +12,16 @@ configure_make(
     name = "python",
     args = ["-j"],
     build_data = [
-        "@openssl",
+        "@openssl//:dir",
     ],
     configure_in_place = True,
     configure_options = [
         "OPT=-O1",  # https://bugs.python.org/issue45700
         "CFLAGS='-Dredacted=\"redacted\"'",  # https://github.com/bazelbuild/rules_foreign_cc/issues/239
     ],
+    env = {
+        "LD_LIBRARY_PATH": "$(execpath @openssl//:dir)/lib",
+    },
     lib_name = "python36",  # defaults to name: clashes with python binary
     lib_source = ":src",
     out_binaries = [
@@ -47,5 +50,12 @@ filegroup(
     name = "bin/python3",
     srcs = [":python"],
     output_group = "python3",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "dir",
+    srcs = [":python"],
+    output_group = "gen_dir",
     visibility = ["//visibility:public"],
 )
