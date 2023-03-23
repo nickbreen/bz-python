@@ -1,6 +1,6 @@
 module(name = "bz-python", version = "0.0.0")
 
-bazel_dep(name = "rules_python", version = "0.19.0")
+bazel_dep(name = "rules_python", version = "0.20.0")
 
 python = use_extension("@rules_python//python:extensions.bzl", "python")
 

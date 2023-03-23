@@ -28,6 +28,7 @@ genrule(
     testonly = True,
     outs = ["python-version.txt"],
     cmd = """$(execpath @python-3.6.15//:bin/python3) --version > $@""",
+    toolchains = ["@rules_python//python:current_py_toolchain"],
     tools = ["@python-3.6.15//:bin/python3"],
 )
 
@@ -42,6 +43,7 @@ genrule(
     testonly = True,
     outs = ["python-openssl-version.txt"],
     cmd = """LD_LIBRARY_PATH="$(execpath @openssl-1.1.1t//:dir)/lib" $(execpath @python-3.6.15//:bin/python3) -c "import ssl; print(ssl.OPENSSL_VERSION)" > $@""",
+    toolchains = ["@rules_python//python:current_py_toolchain"],
     tools = [
         "@openssl-1.1.1t//:dir",
         "@python-3.6.15//:bin/python3",

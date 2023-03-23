@@ -1,4 +1,5 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+load("@rules_python//python:defs.bzl", "py_binary", "py_runtime", "py_runtime_pair")
 
 filegroup(
     name = "src",
@@ -58,4 +59,26 @@ filegroup(
     srcs = [":python"],
     output_group = "gen_dir",
     visibility = ["//visibility:public"],
+)
+
+py_runtime(
+    name = "runtime3",
+    files = [
+        "@openssl-1.1.1t//:openssl",
+        "@python-3.6.15//:python",
+    ],
+    interpreter = "@python-3.6.15//:bin/python3",
+    python_version = "PY3",
+)
+
+py_runtime_pair(
+    name = "runtimes",
+    py2_runtime = None,
+    py3_runtime = ":runtime3",
+)
+
+toolchain(
+    name = "toolchain",
+    toolchain = ":runtimes",
+    toolchain_type = "@bazel_tools//tools/python:toolchain_type",
 )
