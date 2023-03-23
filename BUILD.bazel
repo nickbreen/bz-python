@@ -1,17 +1,9 @@
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@bazel_tools//tools/build_rules:test_rules.bzl", "file_test")
-load("@rules_foreign_cc//foreign_cc:defs.bzl", "runnable_binary")  # not available in 0.9.0
 
 py_binary(
     name = "hello",
     srcs = ["hello.py"],
-)
-
-# fails to find it's LD_LIBRARY_PATH with libssl.so.1.1 and libcrypto.so.1.1 when called as @openssl-1.1.1t//:bin/openssl
-runnable_binary(
-    name = "openssl",
-    binary = "openssl",
-    foreign_cc_target = "@openssl-1.1.1t//:openssl",
 )
 
 sh_test(
@@ -37,8 +29,11 @@ sh_test(
 genrule(
     name = "openssl-version",
     outs = ["openssl-version.txt"],
-    cmd = """$(execpath :openssl) version > $@""",
-    tools = [":openssl"],
+    cmd = """LD_LIBRARY_PATH="$(execpath @openssl-1.1.1t//:dir)/lib" "$(execpath @openssl-1.1.1t//:bin/openssl)" version > $@""",
+    tools = [
+        "@openssl-1.1.1t//:bin/openssl",
+        "@openssl-1.1.1t//:dir",
+    ],
 )
 
 file_test(

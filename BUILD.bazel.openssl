@@ -35,3 +35,10 @@ filegroup(
     output_group = "openssl",
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "dir",
+    srcs = [":openssl"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)
