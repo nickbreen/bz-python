@@ -4,7 +4,10 @@ filegroup(
     name = "src",
     srcs = glob(
         include = ["**"],
-        exclude = ["*.bazel"],
+        exclude = [
+            "BUILD.bazel",
+            "WORKSPACE",
+        ],
     ),
 )
 

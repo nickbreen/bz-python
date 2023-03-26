@@ -9,6 +9,7 @@ http_archive(
     build_file = "@//:BUILD.bazel.python",
     repo_mapping = {
         "@openssl": "@openssl-1.1.1t",
+        "@bzip2": "@bzip2-1.0.8",
     },
     sha256 = "6e28d7cdd6dd513dd190e49bca3972e20fcf455090ccf2ef3f1a227614135d91",
     strip_prefix = "Python-3.6.15",

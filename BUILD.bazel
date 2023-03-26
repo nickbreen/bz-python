@@ -10,7 +10,10 @@ genrule(
     name = "openssl-version",
     testonly = True,
     outs = ["openssl-version.txt"],
-    cmd = """LD_LIBRARY_PATH="$(execpath @openssl-1.1.1t//:dir)/lib" "$(execpath @openssl-1.1.1t//:bin/openssl)" version > $@""",
+    cmd = """
+    export LD_LIBRARY_PATH="$(execpath @openssl-1.1.1t//:dir)/lib"
+    ldd $(execpath @openssl-1.1.1t//:bin/openssl)
+    $(execpath @openssl-1.1.1t//:bin/openssl) version | tee $@""",
     tools = [
         "@openssl-1.1.1t//:bin/openssl",
         "@openssl-1.1.1t//:dir",
@@ -27,7 +30,7 @@ genrule(
     name = "python-version",
     testonly = True,
     outs = ["python-version.txt"],
-    cmd = """$(execpath @python-3.6.15//:bin/python3) --version > $@""",
+    cmd = """$(execpath @python-3.6.15//:bin/python3) --version | tee $@""",
     toolchains = ["@rules_python//python:current_py_toolchain"],
     tools = ["@python-3.6.15//:bin/python3"],
 )
@@ -42,7 +45,8 @@ genrule(
     name = "python-openssl-version",
     testonly = True,
     outs = ["python-openssl-version.txt"],
-    cmd = """LD_LIBRARY_PATH="$(execpath @openssl-1.1.1t//:dir)/lib" $(execpath @python-3.6.15//:bin/python3) -c "import ssl; print(ssl.OPENSSL_VERSION)" > $@""",
+    cmd = """
+    LD_LIBRARY_PATH="$(execpath @openssl-1.1.1t//:dir)/lib" $(execpath @python-3.6.15//:bin/python3) -c "import ssl; print(ssl.OPENSSL_VERSION)" | tee $@""",
     toolchains = ["@rules_python//python:current_py_toolchain"],
     tools = [
         "@openssl-1.1.1t//:dir",
@@ -54,4 +58,71 @@ file_test(
     name = "test-python-openssl-version",
     content = "OpenSSL 1.1.1t  7 Feb 2023\n",
     file = ":python-openssl-version",
+)
+
+genrule(
+    name = "bzip2-version",
+    testonly = True,
+    outs = ["bzip2-version.txt"],
+    cmd = """
+    export LD_LIBRARY_PATH="$(execpath @bzip2-1.0.8//:dir)/lib"
+    ldd $(execpath @bzip2-1.0.8//:bin/bzip2)
+    $(execpath @bzip2-1.0.8//:bin/bzip2) --version 2>&1 | head -n1 | tee $@""",
+    tools = [
+        "@bzip2-1.0.8//:bin/bzip2",
+        "@bzip2-1.0.8//:dir",
+    ],
+)
+
+file_test(
+    name = "test-bzip2-version",
+    content = "bzip2, a block-sorting file compressor.  Version 1.0.8, 13-Jul-2019.\n",
+    file = ":bzip2-version",
+)
+
+sh_test(
+    name = "test-python-bzip",
+    srcs = ["@python-3.6.15//:bin/python3"],
+    args = [
+        "-c",
+        "'import bz2'",
+    ],
+    data = [
+        "@bzip2-1.0.8//:dir",
+    ],
+    env = {
+        "LD_LIBRARY_PATH": "$(execpath @bzip2-1.0.8//:dir)/lib",
+    },
+)
+
+sh_test(
+    name = "test-python-ssl",
+    srcs = ["@python-3.6.15//:bin/python3"],
+    args = [
+        "-c",
+        "'import ssl'",
+    ],
+    data = [
+        "@openssl-1.1.1t//:dir",
+    ],
+    env = {
+        "LD_LIBRARY_PATH": "$(execpath @openssl-1.1.1t//:dir)/lib",
+    },
+)
+
+sh_binary(
+    name = "python",
+    srcs = ["@python-3.6.15//:bin/python3"],
+    args = [
+        "-sc",
+        """'import bz2; import ssl; print(ssl.OPENSSL_VERSION)'""",
+    ],
+    data = [
+        "@bzip2-1.0.8//:dir",
+        "@openssl-1.1.1t//:dir",
+        "@python-3.6.15//:dir",
+    ],
+    env = {
+        "LD_LIBRARY_PATH": "$(execpath @openssl-1.1.1t//:dir)/lib:$(execpath @bzip2-1.0.8//:dir)/lib",
+    },
 )

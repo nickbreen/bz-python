@@ -8,3 +8,5 @@ common:py311 --extra_toolchains="@python3.11.1_toolchains//:all"
 build --incompatible_strict_action_env
 
 test --test_output=errors
+
+#build --sandbox_debug --verbose_failures

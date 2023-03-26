@@ -5,24 +5,21 @@ filegroup(
     name = "src",
     srcs = glob(
         include = ["**"],
-        exclude = ["*.bazel"],
+        exclude = [
+            "BUILD.bazel",
+            "WORKSPACE",
+        ],
     ),
 )
 
 configure_make(
     name = "python",
     args = ["-j"],
-    build_data = [
-        "@openssl//:dir",
-    ],
     configure_in_place = True,
     configure_options = [
-        "OPT=-O1",  # https://bugs.python.org/issue45700
-        "CFLAGS='-Dredacted=\"redacted\"'",  # https://github.com/bazelbuild/rules_foreign_cc/issues/239
+        """OPT=-O1""",  # https://bugs.python.org/issue45700
+        """CFLAGS='-Dredacted="redacted"'""",  # https://github.com/bazelbuild/rules_foreign_cc/issues/239
     ],
-    env = {
-        "LD_LIBRARY_PATH": "$(execpath @openssl//:dir)/lib",
-    },
     lib_name = "python36",  # defaults to name: clashes with python binary
     lib_source = ":src",
     out_binaries = [
@@ -43,6 +40,7 @@ configure_make(
     ],
     out_data_dirs = ["lib"],
     deps = [
+        "@bzip2",
         "@openssl",
     ],
 )
@@ -64,10 +62,11 @@ filegroup(
 py_runtime(
     name = "runtime3",
     files = [
-        "@openssl-1.1.1t//:openssl",
-        "@python-3.6.15//:python",
+        ":python",
+        "@bzip2",
+        "@openssl",
     ],
-    interpreter = "@python-3.6.15//:bin/python3",
+    interpreter = ":bin/python3",
     python_version = "PY3",
 )
 

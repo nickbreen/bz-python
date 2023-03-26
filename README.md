@@ -17,6 +17,7 @@ Though it seems since the publication of the above, `@rules_python` has solved t
 To run this example:
 
 ```shell
+bazel run --config py36 hello   # > Hello, 3.6.15!
 bazel run --config py39 hello   # > Hello, 3.9.12!
 bazel run --config py311 hello  # > Hello, 3.11.1!
 bazel run hello                 # > Hello, 3.10.6!
@@ -29,3 +30,5 @@ the configuration for apparently esoteric versions.
 
 One might want to DIY it anyway to make use of your own [platforms and constraints](https://bazel.build/reference/be/platform) 
 to automatically select the toolchains.
+
+Python 3.6.15 has been DIY'd using [rules_foreign_cc](https://github.com/bazelbuild/rules_foreign_cc) warts 'n' all.

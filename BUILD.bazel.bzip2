@@ -1,30 +1,71 @@
-load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "make")
 
 filegroup(
     name = "src",
     srcs = glob(
         include = ["**"],
-        exclude = ["*.bazel"],
+        exclude = [
+            "BUILD.bazel",
+            "WORKSPACE",
+        ],
     ),
 )
 
-cmake(
-    name = "bzip2",
-    build_args = [
-        "--verbose",
-        "--",
+make(
+    name = "bzip2-static",
+    args = [
         "-j",
     ],
     lib_source = ":src",
-    out_binaries = ["bzip2"],
-    out_shared_libs = ["libbzip2.a"],
-    out_static_libs = ["libbzip2.so"],
+    out_binaries = [
+        "bunzip2",
+        "bzcat",
+        "bzdiff",
+        "bzgrep",
+        "bzip2",
+        "bzip2recover",
+        "bzmore",
+    ],
+    out_static_libs = ["libbz2.a"],
+)
+
+make(
+    name = "bzip2-shared",
+    args = [
+        "-j",
+        "-f",
+        "Makefile-libbz2_so",
+    ],
+    lib_source = ":src",
+    out_binaries = ["bzip2-shared"],
+    out_shared_libs = ["libbz2.so"],
+    postfix_script = """
+    install -vDt $INSTALLDIR/bin bzip2-shared
+    install -vDt $INSTALLDIR/include bzlib.h
+    install -vDt $INSTALLDIR/lib libbz2.so.1.0.8
+    ln -vsT libbz2.so.1.0.8 $INSTALLDIR/lib/libbz2.so.1.0
+    ln -vsT libbz2.so.1.0.8 $INSTALLDIR/lib/libbz2.so.1
+    ln -vsT libbz2.so.1.0.8 $INSTALLDIR/lib/libbz2.so
+    """,
+    targets = [""],
+)
+
+alias(
+    name = "bzip2",
+    actual = ":bzip2-shared",
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "bin/bzip2",
-    srcs = [":bzip2"],
-    output_group = "bzip2",
+    srcs = [":bzip2-shared"],
+    output_group = "bzip2-shared",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "dir",
+    srcs = [":bzip2-shared"],
+    output_group = "gen_dir",
     visibility = ["//visibility:public"],
 )
