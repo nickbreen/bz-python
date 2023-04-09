@@ -1,9 +1,25 @@
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@bazel_tools//tools/build_rules:test_rules.bzl", "file_test")
 
-py_binary(
-    name = "hello",
-    srcs = ["hello.py"],
+genrule(
+    name = "bzip2-version",
+    testonly = True,
+    outs = ["bzip2-version.txt"],
+    cmd = """
+    export LD_LIBRARY_PATH="$(execpath @bzip2-1.0.8//:dir)/lib"
+    ldd $(execpath @bzip2-1.0.8//:bin/bzip2)
+    $(execpath @bzip2-1.0.8//:bin/bzip2) --version 2>&1 | head -n1 | tee $@
+    """,
+    tools = [
+        "@bzip2-1.0.8//:bin/bzip2",
+        "@bzip2-1.0.8//:dir",
+    ],
+)
+
+file_test(
+    name = "test-bzip2-version",
+    content = "bzip2, a block-sorting file compressor.  Version 1.0.8, 13-Jul-2019.\n",
+    file = ":bzip2-version",
 )
 
 genrule(
@@ -13,7 +29,8 @@ genrule(
     cmd = """
     export LD_LIBRARY_PATH="$(execpath @openssl-1.1.1t//:dir)/lib"
     ldd $(execpath @openssl-1.1.1t//:bin/openssl)
-    $(execpath @openssl-1.1.1t//:bin/openssl) version | tee $@""",
+    $(execpath @openssl-1.1.1t//:bin/openssl) version | tee $@
+    """,
     tools = [
         "@openssl-1.1.1t//:bin/openssl",
         "@openssl-1.1.1t//:dir",
@@ -46,11 +63,12 @@ genrule(
     testonly = True,
     outs = ["python-openssl-version.txt"],
     cmd = """
-    LD_LIBRARY_PATH="$(execpath @openssl-1.1.1t//:dir)/lib" $(execpath @python-3.6.15//:bin/python3) -c "import ssl; print(ssl.OPENSSL_VERSION)" | tee $@""",
+    export LD_LIBRARY_PATH="$(execpath @openssl-1.1.1t//:dir)/lib"
+    $(PYTHON3) -c "import ssl; print(ssl.OPENSSL_VERSION)" | tee $@
+    """,
     toolchains = ["@rules_python//python:current_py_toolchain"],
     tools = [
         "@openssl-1.1.1t//:dir",
-        "@python-3.6.15//:bin/python3",
     ],
 )
 
@@ -60,53 +78,20 @@ file_test(
     file = ":python-openssl-version",
 )
 
-genrule(
-    name = "bzip2-version",
-    testonly = True,
-    outs = ["bzip2-version.txt"],
-    cmd = """
-    export LD_LIBRARY_PATH="$(execpath @bzip2-1.0.8//:dir)/lib"
-    ldd $(execpath @bzip2-1.0.8//:bin/bzip2)
-    $(execpath @bzip2-1.0.8//:bin/bzip2) --version 2>&1 | head -n1 | tee $@""",
-    tools = [
-        "@bzip2-1.0.8//:bin/bzip2",
-        "@bzip2-1.0.8//:dir",
-    ],
+py_binary(
+    name = "hello",
+    srcs = ["hello.py"],
 )
 
-file_test(
-    name = "test-bzip2-version",
-    content = "bzip2, a block-sorting file compressor.  Version 1.0.8, 13-Jul-2019.\n",
-    file = ":bzip2-version",
-)
-
-sh_test(
-    name = "test-python-bzip",
-    srcs = ["@python-3.6.15//:bin/python3"],
-    args = [
-        "-c",
-        "'import bz2'",
-    ],
-    data = [
-        "@bzip2-1.0.8//:dir",
-    ],
-    env = {
-        "LD_LIBRARY_PATH": "$(execpath @bzip2-1.0.8//:dir)/lib",
-    },
-)
-
-sh_test(
-    name = "test-python-ssl",
-    srcs = ["@python-3.6.15//:bin/python3"],
-    args = [
-        "-c",
-        "'import ssl'",
-    ],
+# This only works as one expects when the right python toolchain is selected. Use --config py36
+py_binary(
+    name = "hello_ssl",
+    srcs = ["hello_ssl.py"],
     data = [
         "@openssl-1.1.1t//:dir",
     ],
     env = {
-        "LD_LIBRARY_PATH": "$(execpath @openssl-1.1.1t//:dir)/lib",
+        "LD_LIBRARY_PATH": "$(rootpath @openssl-1.1.1t//:dir)/lib",
     },
 )
 
@@ -115,7 +100,7 @@ sh_binary(
     srcs = ["@python-3.6.15//:bin/python3"],
     args = [
         "-sc",
-        """'import bz2; import ssl; print(ssl.OPENSSL_VERSION)'""",
+        """'import os; print(os.getcwd()); print([(p, os.listdir(p)) for p in os.environ["LD_LIBRARY_PATH"].split(os.pathsep) if os.path.isdir(p)]); import ssl; print(ssl.OPENSSL_VERSION)'""",
     ],
     data = [
         "@bzip2-1.0.8//:dir",
@@ -123,6 +108,6 @@ sh_binary(
         "@python-3.6.15//:dir",
     ],
     env = {
-        "LD_LIBRARY_PATH": "$(execpath @openssl-1.1.1t//:dir)/lib:$(execpath @bzip2-1.0.8//:dir)/lib",
+        "LD_LIBRARY_PATH": "$(rootpath @openssl-1.1.1t//:dir)/lib:$(rootpath @bzip2-1.0.8//:dir)/lib:$(rootpath @python-3.6.15//:dir)/lib",
     },
 )
