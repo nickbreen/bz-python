@@ -1,20 +1,6 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 load("@rules_python//python:defs.bzl", "py_binary", "py_runtime", "py_runtime_pair")
 
-genrule(
-    name = "setup",
-    outs = ["Modules/Setup.local"],
-    cmd = """
-    exec >> $@
-    echo 'SSL=$(location @openssl//:dir)'
-    echo '#_ssl _ssl.c -DUSE_SSL -I$$(SSL)/include -I$$(SSL)/include/openssl -L$$(SSL)/lib -lssl -lcrypto'
-    echo '_ssl _ssl.c -DUSE_SSL -I$$(SSL)/include -I$$(SSL)/include/openssl $$(SSL)/lib/libssl.a $$(SSL)/lib/libcrypto.a  # statically link in libssl and libcrypto'
-    """,
-    tools = [
-        "@openssl//:dir",
-    ],
-)
-
 filegroup(
     name = "src",
     srcs = glob(
@@ -23,7 +9,7 @@ filegroup(
             "BUILD.bazel",
             "WORKSPACE",
         ],
-    ) + [":setup"],
+    ),
 )
 
 configure_make(
@@ -39,6 +25,10 @@ configure_make(
         """CFLAGS='-Dredacted="redacted"'""",  # https://github.com/bazelbuild/rules_foreign_cc/issues/239
     ],
     env = {
+        # Python's build tests that some modules can be loaded and fails to include those modules if not: so the build
+        # environment also needs runtime configuration.
+        # See bazel-out/k8-opt-exec-2B5CBBC6/bin/external/python-3.6.15/python36_foreign_cc/Configure.log or similar
+        # for a log of modules that have been excluded.
         "LD_LIBRARY_PATH": "$(execpath @openssl//:dir)/lib:$(execpath @bzip2//:dir)/lib",
     },
     lib_name = "python36",  # defaults to name: clashes with python binary
