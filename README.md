@@ -56,7 +56,23 @@ ldd ${py3_dirs[0]}/lib/python3.6/lib-dynload/_ssl.cpython-36m-x86_64-linux-gnu.s
 
 Notice (above) we have to configure `LD_LIBRARY_PATH` manually, the same applies to `genrule` and `py_binary` rules.
 
-Dynamic linking is fiddly. Configuring python to static link is also fiddly.
+Dynamic linking is fiddly. Configuring python to static link is also fiddly, if this works at all:
+
+```BUILD
+genrule(
+    name = "local",  # ... and include in :srcs
+    outs = ["python36/Modules/Setup.local"],  # path prefix includes the value of configure_make(lib_name) 
+    cmd = """
+    exec >> $@
+    # Copied from Modules/Setup.dist and modified
+    echo 'SSL=$(location @openssl//:dir)'
+    echo '_ssl _ssl.c -DUSE_SSL -I$$(SSL)/include -I$$(SSL)/include/openssl $$(SSL)/lib/libssl.a $$(SSL)/lib/libcrypto.a  # statically link in libssl and libcrypto'
+    """,
+    tools = [
+        "@openssl//:dir",
+    ],
+)
+```
 
 # Examples
 
