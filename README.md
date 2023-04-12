@@ -1,8 +1,20 @@
-Bazel, by default, as at 6.0.0, still relies on the system python installation.
+Bazel, as at 6.0.0, still relies, by default, on the system python installation.
 
 This is non-hermetic and problematic when you need to be specific about python versions; i.e. _which_ 3._x_?
 
-Even building from source is problematic as the build system may have different library versions linked; e.g. openssl, zlib.
+# Python Rules
+
+Happily the python standalone releases can be added to a [--distdir](https://bazel.build/reference/command-line-reference#flag--distdir)
+
+There's only a handful of python versions hardcoded into `@rules_python//python:versions.bzl`. So one would have to DIY 
+the configuration for apparently esoteric versions.
+
+# Building
+
+One might want to DIY it anyway and make use of your own [platforms and constraints](https://bazel.build/reference/be/platform)
+to automatically select the toolchain(s).
+
+Building from source is problematic as the build system may have different library versions linked; e.g. openssl, zlib.
 
 There are a couple of approaches others have taken to solve this:
 
@@ -10,25 +22,56 @@ There are a couple of approaches others have taken to solve this:
 - [Hermetic Python Toolchain with Bazel](https://www.anthonyvardaro.com/blog/hermetic-python-toolchain-with-bazel)
 - [Dropbox](https://github.com/dropbox/dbx_build_tools/blob/master/thirdparty/cpython/BUILD.python39)
 
-Using some form of [portable python](https://pypi.org/project/portable-python/) is maddeningly recursive as it's written in python.
+Using some form of [portable python](https://pypi.org/project/portable-python/) is maddeningly recursive as it's 
+written _in python_.
 
-Though it seems since the publication of the above, `@rules_python` has solved the problem using https://github.com/indygreg/python-build-standalone
+## Overview
 
-To run this example:
+Python 3.6.15 has been DIY'd with [rules_foreign_cc](https://github.com/bazelbuild/rules_foreign_cc) warts 'n' all.
+
+- You'll need the python source for which ever version you want, this example uses 3.6.x as that happens to be the version 
+  available in old crappy EoL'd RHEL6 and just might _still_ be hanging around smelling up the place.
+- You'll also need sources for some python modules' dependencies: this example uses bzip2 and openssl as you'll need
+  these to use `pip`.
+- Load these in `WORKSPACE` with `http_archive`, build them using `rules_foreign_cc`.
+- Define a `py_runtime_pair` toolchain and use it.
+
+## Inspecting Python Modules
 
 ```shell
-bazel run --config py36 hello   # > Hello, 3.6.15!
-bazel run --config py39 hello   # > Hello, 3.9.12!
-bazel run --config py311 hello  # > Hello, 3.11.1!
-bazel run hello                 # > Hello, 3.10.6!
+bz2_dirs=($(bazel cquery --output files @bzip2-1.0.8//:dir))
+ssl_dirs=($(bazel cquery --output files @openssl-1.1.1t//:dir))
+py3_dirs=($(bazel cquery --output files @python-3.6.15//:dir))
+
+# What do they need?
+objdump -p ${py3_dirs[0]}/lib/python3.6/lib-dynload/_bz2.cpython-36m-x86_64-linux-gnu.so | grep NEEDED
+objdump -p ${py3_dirs[0]}/lib/python3.6/lib-dynload/_ssl.cpython-36m-x86_64-linux-gnu.so | grep NEEDED
+# Where can they be found?
+export LD_LIBRARY_PATH="${bz2_dirs[@]/%//lib:}${ssl_dirs[@]/%//lib:}${LD_LIBRARY_PATH}"
+ldd ${py3_dirs[0]}/lib/python3.6/lib-dynload/_bz2.cpython-36m-x86_64-linux-gnu.so
+ldd ${py3_dirs[0]}/lib/python3.6/lib-dynload/_ssl.cpython-36m-x86_64-linux-gnu.so
 ```
 
-Happily the python standalone releases can be added to a [--distdir](https://bazel.build/reference/command-line-reference#flag--distdir)
+## Problems
 
-There's only a handful of python versions hardcoded into `@rules_python//python:versions.bzl`. So one would have to DIY 
-the configuration for apparently esoteric versions.
+Notice (above) we have to configure `LD_LIBRARY_PATH` manually, the same applies to `genrule` and `py_binary` rules.
 
-One might want to DIY it anyway to make use of your own [platforms and constraints](https://bazel.build/reference/be/platform) 
-to automatically select the toolchains.
+Dynamic linking is fiddly. Configuring python to static link is also fiddly.
 
-Python 3.6.15 has been DIY'd using [rules_foreign_cc](https://github.com/bazelbuild/rules_foreign_cc) warts 'n' all.
+# Examples
+
+To run these examples:
+
+```shell
+bazel run --config py36 hello   # > Hello, 3.6.15!       # this is our DIY built toolchain.
+bazel run --config py39 hello   # > Hello, 3.9.12!
+bazel run --config py311 hello  # > Hello, 3.11.1!
+bazel run hello                 # > Hello, 3.10.7!       # this is the OS's python version.
+```
+
+```shell
+bazel run --config py36 hello_ssl   # > Hello SSL, OpenSSL 1.1.1t  7 Feb 2023!       # this is our DIY built toolchain.
+bazel run --config py39 hello_ssl   # > Hello SSL, OpenSSL 1.1.1n  15 Mar 2022!
+bazel run --config py311 hello_ssl  # > Hello SSL, OpenSSL 1.1.1s  1 Nov 2022!
+bazel run hello_ssl                 # > Hello SSL, OpenSSL 3.0.5 5 Jul 2022!         # this is the OS's openssl version.
+```

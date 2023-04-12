@@ -30,6 +30,7 @@ configure_make(
     name = "python",
     args = ["-j"],
     build_data = [
+        "@bzip2//:dir",
         "@openssl//:dir",
     ],
     configure_in_place = True,
@@ -38,7 +39,7 @@ configure_make(
         """CFLAGS='-Dredacted="redacted"'""",  # https://github.com/bazelbuild/rules_foreign_cc/issues/239
     ],
     env = {
-        "LD_LIBRARY_PATH": "$(execpath @openssl//:dir)/lib",
+        "LD_LIBRARY_PATH": "$(execpath @openssl//:dir)/lib:$(execpath @bzip2//:dir)/lib",
     },
     lib_name = "python36",  # defaults to name: clashes with python binary
     lib_source = ":src",
