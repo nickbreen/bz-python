@@ -91,3 +91,7 @@ bazel run --config py39 hello_ssl   # > Hello SSL, OpenSSL 1.1.1n  15 Mar 2022!
 bazel run --config py311 hello_ssl  # > Hello SSL, OpenSSL 1.1.1s  1 Nov 2022!
 bazel run hello_ssl                 # > Hello SSL, OpenSSL 3.0.5 5 Jul 2022!         # this is the OS's openssl version.
 ```
+
+# Problems
+
+The zipimport module requires zlib, specifically the zlib sources (zlib1g-dev or zliv-devel).
