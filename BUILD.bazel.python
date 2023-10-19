@@ -13,13 +13,13 @@ filegroup(
 )
 
 configure_make(
-    name = "python",
+    name = "python36",
     args = ["-j"],
     build_data = [
         "@bzip2//:dir",
         "@openssl//:dir",
+        "@zlib//:dir",
     ],
-    configure_in_place = True,
     configure_options = [
         """OPT=-O1""",  # https://bugs.python.org/issue45700
         """CFLAGS='-Dredacted="redacted"'""",  # https://github.com/bazelbuild/rules_foreign_cc/issues/239
@@ -29,9 +29,8 @@ configure_make(
         # environment also needs runtime configuration.
         # See bazel-out/k8-opt-exec-2B5CBBC6/bin/external/python-3.6.15/python36_foreign_cc/Configure.log or similar
         # for a log of modules that have been excluded.
-        "LD_LIBRARY_PATH": "$(execpath @openssl//:dir)/lib:$(execpath @bzip2//:dir)/lib",
+        "LD_LIBRARY_PATH": "$(execpath @openssl//:dir)/lib:$(execpath @bzip2//:dir)/lib:$(execpath @zlib//:dir)/lib",
     },
-    lib_name = "python36",  # defaults to name: clashes with python binary
     lib_source = ":src",
     out_binaries = [
         "2to3",
@@ -53,19 +52,20 @@ configure_make(
     deps = [
         "@bzip2",
         "@openssl",
+        "@zlib",
     ],
 )
 
 filegroup(
     name = "bin/python3",
-    srcs = [":python"],
+    srcs = [":python36"],
     output_group = "python3",
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "dir",
-    srcs = [":python"],
+    srcs = [":python36"],
     output_group = "gen_dir",
     visibility = ["//visibility:public"],
 )
@@ -74,8 +74,9 @@ py_runtime(
     name = "runtime3",
     files = [
         ":dir",
-        "@bzip2//:dir",
-        "@openssl//:dir",
+        #        "@bzip2//:dir",
+        #        "@openssl//:dir",
+        #        "@zlib//:dir",
     ],
     interpreter = ":bin/python3",
     python_version = "PY3",

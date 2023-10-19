@@ -13,9 +13,7 @@ filegroup(
 
 make(
     name = "bzip2-static",
-    args = [
-        "-j",
-    ],
+    args = ["-j"],
     lib_source = ":src",
     out_binaries = [
         "bunzip2",

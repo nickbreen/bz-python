@@ -27,19 +27,19 @@ genrule(
     testonly = True,
     outs = ["openssl-version.txt"],
     cmd = """
-    export LD_LIBRARY_PATH="$(execpath @openssl-1.1.1t//:dir)/lib"
-    ldd $(execpath @openssl-1.1.1t//:bin/openssl)
-    $(execpath @openssl-1.1.1t//:bin/openssl) version | tee $@
+    export LD_LIBRARY_PATH="$(execpath @openssl-1.1.1w//:dir)/lib"
+    ldd $(execpath @openssl-1.1.1w//:bin/openssl)
+    $(execpath @openssl-1.1.1w//:bin/openssl) version | tee $@
     """,
     tools = [
-        "@openssl-1.1.1t//:bin/openssl",
-        "@openssl-1.1.1t//:dir",
+        "@openssl-1.1.1w//:bin/openssl",
+        "@openssl-1.1.1w//:dir",
     ],
 )
 
 file_test(
     name = "test-openssl-version",
-    content = "OpenSSL 1.1.1t  7 Feb 2023\n",
+    content = "OpenSSL 1.1.1w  11 Sep 2023\n",
     file = ":openssl-version",
 )
 
@@ -62,18 +62,18 @@ genrule(
     testonly = True,
     outs = ["python-openssl-version.txt"],
     cmd = """
-    export LD_LIBRARY_PATH="$(execpath @openssl-1.1.1t//:dir)/lib"
+    export LD_LIBRARY_PATH="$(execpath @openssl-1.1.1w//:dir)/lib"
     $(PYTHON3) -c "import ssl; print(ssl.OPENSSL_VERSION)" | tee $@
     """,
     toolchains = ["@rules_python//python:current_py_toolchain"],
     tools = [
-        "@openssl-1.1.1t//:dir",
+        "@openssl-1.1.1w//:dir",
     ],
 )
 
 file_test(
     name = "test-python-openssl-version",
-    content = "OpenSSL 1.1.1t  7 Feb 2023\n",
+    content = "OpenSSL 1.1.1w  11 Sep 2023\n",
     file = ":python-openssl-version",
 )
 
@@ -88,10 +88,10 @@ py_binary(
     name = "hello_ssl",
     srcs = ["hello_ssl.py"],
     data = [
-        "@openssl-1.1.1t//:dir",
+        "@openssl-1.1.1w//:dir",
     ],
     env = {
-        "LD_LIBRARY_PATH": "$(rootpath @openssl-1.1.1t//:dir)/lib",
+        "LD_LIBRARY_PATH": "$(rootpath @openssl-1.1.1w//:dir)/lib",
     },
 )
 
@@ -100,14 +100,15 @@ sh_binary(
     srcs = ["@python-3.6.15//:bin/python3"],
     args = [
         "-sc",
-        """'import os; print(os.getcwd()); print([(p, os.listdir(p)) for p in os.environ["LD_LIBRARY_PATH"].split(os.pathsep) if os.path.isdir(p)]); import ssl; print(ssl.OPENSSL_VERSION)'""",
+        """'import os; print(os.getcwd()); print([(p, os.listdir(p)) for p in os.environ["LD_LIBRARY_PATH"].split(os.pathsep) if os.path.isdir(p)]); import ssl; print(ssl.OPENSSL_VERSION); import zlib; print(zlib.ZLIB_VERSION); print(zlib.ZLIB_RUNTIME_VERSION);'""",
     ],
     data = [
         "@bzip2-1.0.8//:dir",
-        "@openssl-1.1.1t//:dir",
+        "@openssl-1.1.1w//:dir",
         "@python-3.6.15//:dir",
+        "@zlib-1.3//:dir",
     ],
     env = {
-        "LD_LIBRARY_PATH": "$(rootpath @openssl-1.1.1t//:dir)/lib:$(rootpath @bzip2-1.0.8//:dir)/lib:$(rootpath @python-3.6.15//:dir)/lib",
+        "LD_LIBRARY_PATH": "$(rootpath @openssl-1.1.1w//:dir)/lib:$(rootpath @bzip2-1.0.8//:dir)/lib:$(rootpath @python-3.6.15//:dir)/lib:$(rootpath @zlib-1.3//:dir)/lib",
     },
 )

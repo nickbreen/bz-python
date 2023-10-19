@@ -1,4 +1,4 @@
-Bazel, as at 6.0.0, still relies, by default, on the system python installation.
+Bazel, as at 6.0.0, still relies on, by default, the system python installation.
 
 This is non-hermetic and problematic when you need to be specific about python versions; i.e. _which_ 3._x_?
 
@@ -30,8 +30,8 @@ written _in python_.
 Python 3.6.15 has been DIY'd with [rules_foreign_cc](https://github.com/bazelbuild/rules_foreign_cc) warts 'n' all.
 
 - You'll need the python source for which ever version you want, this example uses 3.6.x as that happens to be the version 
-  available in old crappy EoL'd RHEL6 and just might _still_ be hanging around smelling up the place.
-- You'll also need sources for some python modules' dependencies: this example uses bzip2 and openssl as you'll need
+  available in crappy old EoL'd RHEL6 which just might _still_ be hanging around smelling up the place.
+- You'll also need sources for some python modules' dependencies: this example uses zlib, bzip2, and openssl as you'll need
   these to use `pip`.
 - Load these in `WORKSPACE` with `http_archive`, build them using `rules_foreign_cc`.
 - Define a `py_runtime_pair` toolchain and use it.
@@ -40,7 +40,7 @@ Python 3.6.15 has been DIY'd with [rules_foreign_cc](https://github.com/bazelbui
 
 ```shell
 bz2_dirs=($(bazel cquery --output files @bzip2-1.0.8//:dir))
-ssl_dirs=($(bazel cquery --output files @openssl-1.1.1t//:dir))
+ssl_dirs=($(bazel cquery --output files @openssl-1.1.1w//:dir))
 py3_dirs=($(bazel cquery --output files @python-3.6.15//:dir))
 
 # What do they need?
@@ -77,6 +77,13 @@ genrule(
 # Examples
 
 To run these examples:
+
+```shell
+bazel test --config py36 ...
+bazel test --config py39 ...
+bazel test --config py311 ...
+bazel test ...
+```
 
 ```shell
 bazel run --config py36 hello   # > Hello, 3.6.15!       # this is our DIY built toolchain.
